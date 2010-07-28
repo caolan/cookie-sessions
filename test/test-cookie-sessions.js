@@ -333,7 +333,7 @@ exports['writeHead'] = function(test){
     };
     var req = {
         headers: {},
-        writeHead: function(headers){
+        writeHead: function(code, headers){
             test.equals(headers['Set-Cookie'], '_node=serialized_session');
             test.equals(headers['original'], 'header');
         }
@@ -349,7 +349,7 @@ exports['writeHead'] = function(test){
     var next = function(){
         test.ok(true, 'chain.next called');
         req.session = {test:'test'};
-        req.writeHead({'original':'header'});
+        req.writeHead(200, {'original':'header'});
         // restore copied functions
         sessions.serialize = serialize;
         test.done();
