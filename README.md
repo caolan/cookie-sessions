@@ -27,3 +27,21 @@ accepts a number of options:
       (default: 24 hours)
     * session_key -- The cookie key name to store the session data in
       (default: _node)
+
+
+## Why store session data in cookies?
+
+* Its fast, you don't need to hit the filesystem or a database to look up
+  session data
+* It scales easily. You don't need to worry about sticky-sessions when
+  load-balancing across multiple nodes.
+* No server-side persistence requirements
+
+## Caveats
+
+* You can only store 4k of data in a cookie
+* Higher-bandwidth requirements, since the cookie is sent to the server with
+  every request.
+
+__In summary:__ don't use cookie storage if you keep a lot of data in your
+sessions!
