@@ -7,7 +7,7 @@ wouldn't recommend for production use just yet.
 Session data is stored on the request object in the 'session' property:
 
     var connect = require('connect'),
-        session = require('cookie-sessions');
+        sessions = require('cookie-sessions');
 
     Connect.createServer(
         sessions.filter({secret: '123abc'}),
