@@ -236,6 +236,13 @@ exports['readCookies'] = function(test){
     test.done();
 };
 
+exports['readCookies alternate format'] = function(test){
+    var req = {headers: {cookie: "name1=data1;test=\"abcXYZ%20123\""}};
+    var r = sessions.readCookies(req);
+    test.same(r, {name1: 'data1', test: '"abcXYZ 123"'}, 'test header read ok');
+    test.done();
+};
+
 exports['readCookies no cookie in headers'] = function(test){
     var req = {headers: {}};
     var r = sessions.readCookies(req);
@@ -378,4 +385,20 @@ exports['onInit no secret set'] = function(test){
         test.ok(true, 'throw exception if no secret set in server settings');
     }
     test.done();
+};
+
+exports['set multiple cookies'] = function(test){
+    var req = {headers: {cookie:''}};
+    var res = {writeHead: function(statusCode, headers){
+        test.equals(
+            headers['Set-Cookie'].split(/\s*;\s*/g)[1],
+            'testcookie=testvalue'
+        );
+        test.equals(headers['Set-Cookie'].split(/\s*;\s*/g).length, 2);
+        test.done();
+    }};
+    sessions.filter({secret: 'secret'})(req, res, function(){
+        req.session = {test: 'test'};
+        res.writeHead(200, {'Set-Cookie':'testcookie=testvalue'});
+    });
 };
