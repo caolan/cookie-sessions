@@ -323,7 +323,7 @@ exports['onRequest'] = function(test){
             req.session, 'testsession', 'req.session equals session data'
         );
     };
-    sessions.filter(s)(req, 'res', next);
+    sessions(s)(req, 'res', next);
 
     // restore copied functions
     sessions.readSession = readSession;
@@ -361,14 +361,14 @@ exports['writeHead'] = function(test){
         sessions.serialize = serialize;
         test.done();
     };
-    sessions.filter(s)(req, res, next);
+    sessions(s)(req, res, next);
 };
 
 exports['onInit secret set'] = function(test){
     test.expect(0);
     var s = {secret: 'secret'};
     try {
-        sessions.filter({secret: 'secret'});
+        sessions({secret: 'secret'});
     }
     catch(e){
         test.ok(false, 'do nothing if secret set in server settings');
@@ -379,7 +379,7 @@ exports['onInit secret set'] = function(test){
 exports['onInit no secret set'] = function(test){
     test.expect(1);
     try {
-        sessions.filter({});
+        sessions({});
     }
     catch(e){
         test.ok(true, 'throw exception if no secret set in server settings');
@@ -397,7 +397,7 @@ exports['set multiple cookies'] = function(test){
         test.equals(headers['Set-Cookie'].split(/\s*;\s*/g).length, 2);
         test.done();
     }};
-    sessions.filter({secret: 'secret'})(req, res, function(){
+    sessions({secret: 'secret'})(req, res, function(){
         req.session = {test: 'test'};
         res.writeHead(200, {'Set-Cookie':'testcookie=testvalue'});
     });

@@ -10,7 +10,7 @@ Session data is stored on the request object in the 'session' property:
         sessions = require('cookie-sessions');
 
     Connect.createServer(
-        sessions.filter({secret: '123abc'}),
+        sessions({secret: '123abc'}),
         function(req, res, next){
             req.session = {'hello':'world'};
             res.writeHead(200, {'Content-Type':'text/plain'});
@@ -19,8 +19,8 @@ Session data is stored on the request object in the 'session' property:
     ).listen(8080);
 
 The session data is JSON.stringified, encrypted and timestamped, then a HMAC
-signature is attached to test for tampering. The sessions.filter function
-accepts a number of options:
+signature is attached to test for tampering. The main function accepts a
+number of options:
 
     * secret -- The secret to encrypt the session data with
     * timeout -- The amount of time in miliseconds before the cookie expires
