@@ -388,17 +388,81 @@ exports['onInit no secret set'] = function(test){
 };
 
 exports['set multiple cookies'] = function(test){
+    var _serialize = sessions.serialize;
+    sessions.serialize = function(){
+        return 'session_data';
+    };
     var req = {headers: {cookie:''}};
     var res = {writeHead: function(statusCode, headers){
-        test.equals(
-            headers['Set-Cookie'].split(';')[1],
-            'testcookie=testvalue'
-        );
-        test.equals(headers['Set-Cookie'].split(';').length, 2);
+        test.equals(statusCode, 200);
+        test.same(headers, [
+            ['other_header', 'val'],
+            ['Set-Cookie', 'testcookie=testvalue'],
+            ['Set-Cookie', '_node=session_data']
+        ]);
+        sessions.serialize = _serialize;
         test.done();
     }};
     sessions({secret: 'secret'})(req, res, function(){
         req.session = {test: 'test'};
-        res.writeHead(200, {'Set-Cookie':'testcookie=testvalue'});
+        res.writeHead(200, {
+            'other_header': 'val',
+            'Set-Cookie':'testcookie=testvalue'
+        });
     });
+};
+
+exports['set single cookie'] = function(test){
+    var _serialize = sessions.serialize;
+    sessions.serialize = function(){
+        return 'session_data';
+    };
+    var req = {headers: {cookie:''}};
+    var res = {writeHead: function(statusCode, headers){
+        test.equals(statusCode, 200);
+        test.same(headers, {
+            'other_header': 'val',
+            'Set-Cookie': '_node=session_data'
+        });
+        sessions.serialize = _serialize;
+        test.done();
+    }};
+    sessions({secret: 'secret'})(req, res, function(){
+        req.session = {test: 'test'};
+        res.writeHead(200, {'other_header': 'val'});
+    });
+};
+
+exports['handle headers as array'] = function(test){
+    var _serialize = sessions.serialize;
+    sessions.serialize = function(){
+        return 'session_data';
+    };
+    var req = {headers: {cookie:''}};
+    var res = {writeHead: function(statusCode, headers){
+        test.equals(statusCode, 200);
+        test.same(headers, [
+            ['header1', 'val1'],
+            ['header2', 'val2'],
+            ['Set-Cookie', '_node=session_data']
+        ]);
+        sessions.serialize = _serialize;
+        test.done();
+    }};
+    sessions({secret: 'secret'})(req, res, function(){
+        req.session = {test: 'test'};
+        res.writeHead(200, [['header1', 'val1'],['header2', 'val2']]);
+    });
+};
+
+exports['convert headers to array'] = function(test){
+    test.same(
+        sessions.headersToArray({'key1':'val1','key2':'val2'}),
+        [['key1','val1'],['key2','val2']]
+    );
+    test.same(
+        sessions.headersToArray([['key1','val1'],['key2','val2']]),
+        [['key1','val1'],['key2','val2']]
+    );
+    test.done();
 };
