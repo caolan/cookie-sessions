@@ -391,10 +391,10 @@ exports['set multiple cookies'] = function(test){
     var req = {headers: {cookie:''}};
     var res = {writeHead: function(statusCode, headers){
         test.equals(
-            headers['Set-Cookie'].split(/\s*;\s*/g)[1],
+            headers['Set-Cookie'].split(';')[1],
             'testcookie=testvalue'
         );
-        test.equals(headers['Set-Cookie'].split(/\s*;\s*/g).length, 2);
+        test.equals(headers['Set-Cookie'].split(';').length, 2);
         test.done();
     }};
     sessions({secret: 'secret'})(req, res, function(){
