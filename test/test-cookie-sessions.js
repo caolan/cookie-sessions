@@ -250,6 +250,12 @@ exports['readCookies no cookie in headers'] = function(test){
     test.done();
 };
 
+exports['readCookies from Connect cookieDecoder'] = function(test){
+    var req = {headers: {}, cookies: {'test':'cookie'}};
+    test.same(sessions.readCookies(req), {'test': 'cookie'});
+    test.done();
+};
+
 exports['readSession'] = function(test){
     test.expect(5);
     var readCookies = sessions.readCookies;
