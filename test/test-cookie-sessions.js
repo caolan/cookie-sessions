@@ -299,7 +299,7 @@ exports['readSession no cookie'] = function(test){
     var r = sessions.readSession(
         'node_session', 'secret', 12, 'request_obj'
     );
-    test.same(r, {}, 'return empty session');
+    test.same(r, undefined, 'return empty session');
 
     // restore copied functions
     sessions.readCookies = readCookies;
@@ -344,7 +344,7 @@ exports['writeHead'] = function(test){
         secret: 'secret',
         timeout: 86400
     };
-    var req = {headers: {}};
+    var req = {headers: {cookie: "_node="}};
     var res = {
         writeHead: function(code, headers){
             test.equals(
@@ -377,6 +377,74 @@ exports['writeHead'] = function(test){
         // restore copied functions
         sessions.serialize = serialize;
         sessions.expires = expires;
+        test.done();
+    };
+    sessions(s)(req, res, next);
+};
+
+exports['writeHead doesnt write cookie if none exists and session is undefined'] = function(test){
+    test.expect(3);
+
+    var s = {
+        session_key:'_node',
+        secret: 'secret',
+        timeout: 86400
+    };
+    var req = {headers: {}};
+    var res = {
+        writeHead: function(code, headers){
+            test.ok(!("Set-Cookie" in headers));
+            test.equals(headers['original'], 'header');
+        }
+    };
+
+    var next = function(){
+        test.ok(true, 'chain.next called');
+        req.session = undefined;
+        res.writeHead(200, {'original':'header'});
+        test.done();
+    };
+    sessions(s)(req, res, next);
+};
+
+exports['writeHead writes empty cookie with immediate expiration if session is undefined'] = function(test){
+    test.expect(4);
+
+    var s = {
+        session_key:'_node',
+        secret: 'secret',
+        timeout: 86400
+    };
+    var req = {headers: {cookie: "_node=Blah"}};
+    var res = {
+        writeHead: function(code, headers){
+            test.equals(
+                headers['Set-Cookie'],
+                '_node=; ' +
+                'expires=now; ' +
+                'path=/'
+            );
+            test.equals(headers['original'], 'header');
+        }
+    };
+
+    var expires = sessions.expires;
+    sessions.expires = function(timeout){
+        test.equals(timeout, 0);
+        return 'now';
+    };
+    var readSession = sessions.readSession;
+    sessions.readSession = function(key, secret, timeout, req) {
+        return {"username": "Bob"};
+    };
+
+    var next = function(){
+        test.ok(true, 'chain.next called');
+        req.session = undefined;
+        res.writeHead(200, {'original':'header'});
+        // restore copied functions
+        sessions.expires = expires;
+        sessions.readSession = readSession;
         test.done();
     };
     sessions(s)(req, res, next);
