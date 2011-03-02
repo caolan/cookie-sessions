@@ -517,3 +517,36 @@ exports['convert headers to array'] = function(test){
     );
     test.done();
 };
+
+exports['send cookies even if there are no headers'] = function (test) {
+    test.expect(2);
+    var req = {headers: {cookie:''}};
+    var res = {
+        writeHead: function (code, headers) {
+            test.equal(code, 200);
+            test.ok(headers['Set-Cookie']);
+            test.done();
+        }
+    };
+    sessions({secret: 'secret', timeout: 12345})(req, res, function () {
+        req.session = {test: 'test'};
+        res.writeHead(200);
+    });
+};
+
+exports['send cookies when no headers but reason_phrase'] = function (test) {
+    test.expect(3);
+    var req = {headers: {cookie:''}};
+    var res = {
+        writeHead: function (code, reason_phrase, headers) {
+            test.equal(code, 200);
+            test.equal(reason_phrase, 'reason');
+            test.ok(headers['Set-Cookie']);
+            test.done();
+        }
+    };
+    sessions({secret: 'secret', timeout: 12345})(req, res, function () {
+        req.session = {test: 'test'};
+        res.writeHead(200, 'reason');
+    });
+};
