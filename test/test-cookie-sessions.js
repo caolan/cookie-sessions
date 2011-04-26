@@ -351,7 +351,7 @@ exports['writeHead'] = function(test){
                 headers['Set-Cookie'],
                 '_node=serialized_session; ' +
                 'expires=expiry_date; ' +
-                'path=/'
+                'path=/; HttpOnly'
             );
             test.equals(headers['original'], 'header');
         }
@@ -422,7 +422,7 @@ exports['writeHead writes empty cookie with immediate expiration if session is u
                 headers['Set-Cookie'],
                 '_node=; ' +
                 'expires=now; ' +
-                'path=/'
+                'path=/; HttpOnly'
             );
             test.equals(headers['original'], 'header');
         }
@@ -494,7 +494,7 @@ exports['set multiple cookies'] = function(test){
             ['Set-Cookie', 'testcookie=testvalue'],
             ['Set-Cookie', '_node=session_data; ' +
                            'expires=expiry_date; ' +
-                           'path=/']
+                           'path=/; HttpOnly']
         ]);
         sessions.serialize = _serialize;
         sessions.expires = _expires;
@@ -530,7 +530,7 @@ exports['set single cookie'] = function(test){
             'other_header': 'val',
             'Set-Cookie': '_node=session_data; ' +
                           'expires=expiry_date; ' +
-                          'path=/'
+                          'path=/; HttpOnly'
         });
         sessions.serialize = _serialize;
         sessions.expires = _expires;
@@ -563,7 +563,7 @@ exports['handle headers as array'] = function(test){
             ['header2', 'val2'],
             ['Set-Cookie', '_node=session_data; ' +
                            'expires=expiry_date; ' +
-                           'path=/']
+                           'path=/; HttpOnly']
         ]);
         sessions.serialize = _serialize;
         test.done();
