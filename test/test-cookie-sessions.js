@@ -230,28 +230,34 @@ exports['serialize data over 4096 chars'] = function(test){
 };
 
 exports['readCookies'] = function(test){
-    var req = {headers: {cookie: "name1=data1; test=\"abcXYZ%20123\""}};
+    var req = {
+        headers: {cookie: "name1=data1; test=\"abcXYZ%20123\""},
+        url: '/'
+    };
     var r = sessions.readCookies(req);
     test.same(r, {name1: 'data1', test: '"abcXYZ 123"'}, 'test header read ok');
     test.done();
 };
 
 exports['readCookies alternate format'] = function(test){
-    var req = {headers: {cookie: "name1=data1;test=\"abcXYZ%20123\""}};
+    var req = {
+        headers: {cookie: "name1=data1;test=\"abcXYZ%20123\""},
+        url: '/'
+    };
     var r = sessions.readCookies(req);
     test.same(r, {name1: 'data1', test: '"abcXYZ 123"'}, 'test header read ok');
     test.done();
 };
 
 exports['readCookies no cookie in headers'] = function(test){
-    var req = {headers: {}};
+    var req = {headers: {}, url: '/'};
     var r = sessions.readCookies(req);
     test.same(r, {}, 'returns empty object');
     test.done();
 };
 
 exports['readCookies from Connect cookieDecoder'] = function(test){
-    var req = {headers: {}, cookies: {'test':'cookie'}};
+    var req = {headers: {}, cookies: {'test':'cookie'}, url: '/'};
     test.same(sessions.readCookies(req), {'test': 'cookie'});
     test.done();
 };
@@ -315,7 +321,7 @@ exports['onRequest'] = function(test){
         secret: 'secret',
         timeout: 86400
     };
-    var req = {};
+    var req = {url: '/'};
 
     sessions.readSession = function(key, secret, timeout, req){
         test.equals(key, '_node', 'readSession called with session key');
@@ -344,7 +350,7 @@ exports['writeHead'] = function(test){
         secret: 'secret',
         timeout: 86400
     };
-    var req = {headers: {cookie: "_node="}};
+    var req = {headers: {cookie: "_node="}, url: '/'};
     var res = {
         writeHead: function(code, headers){
             test.equals(
@@ -390,7 +396,7 @@ exports['writeHead doesnt write cookie if none exists and session is undefined']
         secret: 'secret',
         timeout: 86400
     };
-    var req = {headers: {}};
+    var req = {headers: {}, url: '/'};
     var res = {
         writeHead: function(code, headers){
             test.ok(!("Set-Cookie" in headers));
@@ -415,7 +421,7 @@ exports['writeHead writes empty cookie with immediate expiration if session is u
         secret: 'secret',
         timeout: 86400
     };
-    var req = {headers: {cookie: "_node=Blah"}};
+    var req = {headers: {cookie: "_node=Blah"}, url: '/'};
     var res = {
         writeHead: function(code, headers){
             test.equals(
@@ -486,7 +492,7 @@ exports['set multiple cookies'] = function(test){
         return 'expiry_date';
     };
 
-    var req = {headers: {cookie:''}};
+    var req = {headers: {cookie:''}, url: '/'};
     var res = {writeHead: function(statusCode, headers){
         test.equals(statusCode, 200);
         test.same(headers, [
@@ -523,7 +529,7 @@ exports['set single cookie'] = function(test){
         return 'expiry_date';
     };
 
-    var req = {headers: {cookie:''}};
+    var req = {headers: {cookie:''}, url: '/'};
     var res = {writeHead: function(statusCode, headers){
         test.equals(statusCode, 200);
         test.same(headers, {
@@ -555,7 +561,7 @@ exports['handle headers as array'] = function(test){
         return 'expiry_date';
     };
 
-    var req = {headers: {cookie:''}};
+    var req = {headers: {cookie:''}, url: '/'};
     var res = {writeHead: function(statusCode, headers){
         test.equals(statusCode, 200);
         test.same(headers, [
@@ -588,7 +594,7 @@ exports['convert headers to array'] = function(test){
 
 exports['send cookies even if there are no headers'] = function (test) {
     test.expect(2);
-    var req = {headers: {cookie:''}};
+    var req = {headers: {cookie:''}, url: '/'};
     var res = {
         writeHead: function (code, headers) {
             test.equal(code, 200);
@@ -604,7 +610,7 @@ exports['send cookies even if there are no headers'] = function (test) {
 
 exports['send cookies when no headers but reason_phrase'] = function (test) {
     test.expect(3);
-    var req = {headers: {cookie:''}};
+    var req = {headers: {cookie:''}, url: '/'};
     var res = {
         writeHead: function (code, reason_phrase, headers) {
             test.equal(code, 200);
@@ -616,5 +622,45 @@ exports['send cookies when no headers but reason_phrase'] = function (test) {
     sessions({secret: 'secret', timeout: 12345})(req, res, function () {
         req.session = {test: 'test'};
         res.writeHead(200, 'reason');
+    });
+};
+
+exports['custom path'] = function (test) {
+    test.expect(2);
+    var req = {headers: {cookie:''}, url: '/test/path'};
+    var res = {
+        writeHead: function (code, headers) {
+            test.equal(code, 200);
+            test.ok(/path=\/test\/path/.test(headers['Set-Cookie']));
+            test.done();
+        }
+    };
+    sessions({
+        secret: 'secret',
+        timeout: 12345,
+        path: '/test/path'
+    })(req, res, function () {
+        req.session = {test: 'test'};
+        res.writeHead(200, {'other_header': 'val'});
+    });
+};
+
+exports['don\'t set cookie if incorrect path'] = function (test) {
+    test.expect(2);
+    var req = {headers: {cookie:''}, url: '/other/path'};
+    var res = {
+        writeHead: function (code, headers) {
+            test.equal(code, 200);
+            test.equal(headers['Set-Cookie'], undefined);
+            test.done();
+        }
+    };
+    sessions({
+        secret: 'secret',
+        timeout: 12345,
+        path: '/test/path'
+    })(req, res, function () {
+        req.session = {test: 'test'};
+        res.writeHead(200, {'other_header': 'val'});
     });
 };
