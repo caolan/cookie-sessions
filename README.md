@@ -27,6 +27,7 @@ number of options:
       (default: 24 hours)
     * session_key -- The cookie key name to store the session data in
       (default: _node)
+    * path -- The path to use for the cookie (default: '/')
 
 
 ## Why store session data in cookies?
