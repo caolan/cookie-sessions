@@ -319,14 +319,14 @@ exports['onRequest'] = function(test){
     var s = {
         session_key:'_node',
         secret: 'secret',
-        timeout: 86400
+        timeout: 86400000
     };
     var req = {url: '/'};
 
     sessions.readSession = function(key, secret, timeout, req){
         test.equals(key, '_node', 'readSession called with session key');
         test.equals(secret, 'secret', 'readSession called with secret');
-        test.equals(timeout, 86400, 'readSession called with timeout');
+        test.equals(timeout, 86400000, 'readSession called with timeout');
         return 'testsession';
     };
     var next = function(){
@@ -348,7 +348,7 @@ exports['writeHead'] = function(test){
     var s = {
         session_key:'_node',
         secret: 'secret',
-        timeout: 86400
+        timeout: 86400000
     };
     var req = {headers: {cookie: "_node="}, url: '/'};
     var res = {
@@ -395,7 +395,7 @@ exports['writeHead doesnt write cookie if none exists and session is undefined']
     var s = {
         session_key:'_node',
         secret: 'secret',
-        timeout: 86400
+        timeout: 86400000
     };
     var req = {headers: {}, url: '/'};
     var res = {
@@ -420,7 +420,7 @@ exports['writeHead writes empty cookie with immediate expiration if session is u
     var s = {
         session_key:'_node',
         secret: 'secret',
-        timeout: 86400
+        timeout: 86400000
     };
     var req = {headers: {cookie: "_node=Blah"}, url: '/'};
     var res = {
@@ -490,7 +490,7 @@ exports['set multiple cookies'] = function(test){
 
     var _expires = sessions.expires;
     sessions.expires = function(timeout){
-        test.equals(timeout, 12345);
+        test.equals(timeout, 12345000);
         return 'expiry_date';
     };
 
@@ -510,7 +510,7 @@ exports['set multiple cookies'] = function(test){
         test.done();
     }};
 
-    sessions({secret: 'secret', timeout: 12345})(req, res, function(){
+    sessions({secret: 'secret', timeout: 12345000})(req, res, function(){
         req.session = {test: 'test'};
         res.writeHead(200, {
             'other_header': 'val',
@@ -528,7 +528,7 @@ exports['set single cookie'] = function(test){
 
     var _expires = sessions.expires;
     sessions.expires = function(timeout){
-        test.equals(timeout, 12345);
+        test.equals(timeout, 12345000);
         return 'expiry_date';
     };
 
@@ -546,7 +546,7 @@ exports['set single cookie'] = function(test){
         sessions.expires = _expires;
         test.done();
     }};
-    sessions({secret: 'secret', timeout: 12345})(req, res, function(){
+    sessions({secret: 'secret', timeout: 12345000})(req, res, function(){
         req.session = {test: 'test'};
         res.writeHead(200, {'other_header': 'val'});
     });
@@ -561,7 +561,7 @@ exports['handle headers as array'] = function(test){
 
     var _expires = sessions.expires;
     sessions.expires = function(timeout){
-        test.equals(timeout, 12345);
+        test.equals(timeout, 12345000);
         return 'expiry_date';
     };
 
@@ -579,7 +579,7 @@ exports['handle headers as array'] = function(test){
         sessions.serialize = _serialize;
         test.done();
     }};
-    sessions({secret: 'secret', timeout: 12345})(req, res, function(){
+    sessions({secret: 'secret', timeout: 12345000})(req, res, function(){
         req.session = {test: 'test'};
         res.writeHead(200, [['header1', 'val1'],['header2', 'val2']]);
     });
@@ -607,7 +607,7 @@ exports['send cookies even if there are no headers'] = function (test) {
             test.done();
         }
     };
-    sessions({secret: 'secret', timeout: 12345})(req, res, function () {
+    sessions({secret: 'secret', timeout: 12345000})(req, res, function () {
         req.session = {test: 'test'};
         res.writeHead(200);
     });
@@ -624,7 +624,7 @@ exports['send cookies when no headers but reason_phrase'] = function (test) {
             test.done();
         }
     };
-    sessions({secret: 'secret', timeout: 12345})(req, res, function () {
+    sessions({secret: 'secret', timeout: 12345000})(req, res, function () {
         req.session = {test: 'test'};
         res.writeHead(200, 'reason');
     });
@@ -642,7 +642,7 @@ exports['custom path'] = function (test) {
     };
     sessions({
         secret: 'secret',
-        timeout: 12345,
+        timeout: 12345000,
         path: '/test/path'
     })(req, res, function () {
         req.session = {test: 'test'};
@@ -662,7 +662,7 @@ exports['don\'t set cookie if incorrect path'] = function (test) {
     };
     sessions({
         secret: 'secret',
-        timeout: 12345,
+        timeout: 12345000,
         path: '/test/path'
     })(req, res, function () {
         req.session = {test: 'test'};
@@ -727,7 +727,7 @@ exports['useExpires: false'] = function(test){
         sessions.serialize = _serialize;
         test.done();
     }};
-    sessions({secret: 'secret', timeout: 12345, useExpires: false})(req, res, function(){
+    sessions({secret: 'secret', timeout: 12345000, useExpires: false})(req, res, function(){
         req.session = {test: 'test'};
         res.writeHead(200, {'other_header': 'val'});
     });
@@ -742,7 +742,7 @@ exports['useMaxAge: false'] = function(test){
 
     var _expires = sessions.expires;
     sessions.expires = function(timeout){
-        test.equals(timeout, 12345);
+        test.equals(timeout, 12345000);
         return 'expiry_date';
     };
     var req = {headers: {cookie:''}, url: '/'};
@@ -758,7 +758,7 @@ exports['useMaxAge: false'] = function(test){
         sessions.expires = _expires;
         test.done();
     }};
-    sessions({secret: 'secret', timeout: 12345, useMaxAge: false})(req, res, function(){
+    sessions({secret: 'secret', timeout: 12345000, useMaxAge: false})(req, res, function(){
         req.session = {test: 'test'};
         res.writeHead(200, {'other_header': 'val'});
     });
@@ -773,7 +773,7 @@ exports['useHttpOnly: false'] = function(test){
 
     var _expires = sessions.expires;
     sessions.expires = function(timeout){
-        test.equals(timeout, 12345);
+        test.equals(timeout, 12345000);
         return 'expiry_date';
     };
     var req = {headers: {cookie:''}, url: '/'};
@@ -790,7 +790,7 @@ exports['useHttpOnly: false'] = function(test){
         sessions.expires = _expires;
         test.done();
     }};
-    sessions({secret: 'secret', timeout: 12345, useHttpOnly: false})(req, res, function(){
+    sessions({secret: 'secret', timeout: 12345000, useHttpOnly: false})(req, res, function(){
         req.session = {test: 'test'};
         res.writeHead(200, {'other_header': 'val'});
     });
