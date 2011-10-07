@@ -2,7 +2,7 @@
 , "description": "Secure cookie-based session middleware for Connect"
 , "main": "./index"
 , "author": "Original Author: Caolan McMahon"
-, "version": "0.0.3"
+, "version": "0.0.2"
 , "repository" :
   { "type" : "git"
   , "url" : "http://github.com/jenshimmelreich/cookie-sessions.git"
