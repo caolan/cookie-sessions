@@ -7,7 +7,7 @@
   { "type" : "git"
   , "url" : "http://github.com/jenshimmelreich/cookie-sessions.git"
   }
-, "bugs" : { "web" : "http://github.com/jenshimmelreich/cookie-sessions/issues" }
+, "bugs" : { "url" : "http://github.com/jenshimmelreich/cookie-sessions/issues" }
 , "licenses" :
   [ { "type" : "MIT"
     , "url" : "http://github.com/caolan/cookie-sessions/raw/master/LICENSE"
