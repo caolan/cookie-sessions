@@ -118,11 +118,12 @@ exports['deserialize valid cookie'] = function(test){
 };
 
 exports['deserialize invalid cookie'] = function(test){
-    test.expect(1);
+    test.expect(2);
     // copy some functions
     var valid = sessions.valid;
     var decrypt = sessions.decrypt;
     var parse = JSON.parse;
+    var warn = console.warn;
 
     sessions.valid = function(secret, timeout, str){
         return false;
@@ -133,17 +134,19 @@ exports['deserialize invalid cookie'] = function(test){
     JSON.parse = function(str){
         test.ok(false, 'should not attempt to parse invalid cookie');
     };
-    try {
-        sessions.deserialize('secret', 123, 'cookiestring');
+    console.warn = function(str) {
+        test.ok(str.match('Invalid'), 'Should warn that an invalid cookie was found.');
     }
-    catch(e){
-        test.ok(true, 'throw exception on invalid cookie');
-    }
+
+    // Without parsing bad cookie, it creates a new session.
+    var session = sessions.deserialize('secret', 123, 'cookiestring');
+    test.same(session, {}, 'returns empty object on invalid cookie');
 
     // restore copied functions:
     sessions.valid = valid;
     sessions.decrypt = decrypt;
     JSON.parse = parse;
+    console.warn = warn;
     test.done();
 };
 

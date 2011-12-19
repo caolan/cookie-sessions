@@ -8,6 +8,7 @@
   , "url" : "http://github.com/caolan/cookie-sessions.git"
   }
 , "bugs" : { "url" : "http://github.com/caolan/cookie-sessions/issues" }
+, "devDependencies": { "nodeunit": ">= 0.6.0" }
 , "licenses" :
   [ { "type" : "MIT"
     , "url" : "http://github.com/caolan/cookie-sessions/raw/master/LICENSE"
