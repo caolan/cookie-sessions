@@ -28,6 +28,7 @@ number of options:
     * session_key -- The cookie key name to store the session data in
       (default: _node)
     * path -- The path to use for the cookie (default: '/')
+	* domain -- (optional) Define a specific domain/subdomain scope for the cookie
 
 
 ## Why store session data in cookies?
