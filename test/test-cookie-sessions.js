@@ -348,7 +348,8 @@ exports['writeHead'] = function(test){
     var s = {
         session_key:'_node',
         secret: 'secret',
-        timeout: 86400
+        timeout: 86400,
+        domain:'.domain.com'
     };
     var req = {headers: {cookie: "_node="}, url: '/'};
     var res = {
@@ -357,7 +358,7 @@ exports['writeHead'] = function(test){
                 headers['Set-Cookie'],
                 '_node=serialized_session; ' +
                 'expires=expiry_date; ' +
-                'path=/; HttpOnly'
+                'path=/; HttpOnly; Domain=.domain.com'
             );
             test.equals(headers['original'], 'header');
         }
