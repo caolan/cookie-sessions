@@ -43,7 +43,7 @@ exports = module.exports = (settings) ->
 
 
     # Handle a request - the main method!
-    return (req, res, next) =>
+    return (req, res, next) ->
         # if the request is not under the specified path, do nothing.
         if 0 isnt url.parse(req.url).pathname.indexOf(s.path)
             return next()
@@ -117,7 +117,7 @@ exports = module.exports = (settings) ->
 
 # read session from given request cookie
 # @return undefined if session data wasn't found or couldn't be read
-exports.readSession = (session_key, secret, timeout, req) =>
+exports.readSession = (session_key, secret, timeout, req) ->
     # Reads the session data stored in the cookie named 'key' if it validates,
     # otherwise returns an empty object.
     cookies = exports.readCookies(req)
@@ -160,7 +160,7 @@ exports.headersToArray = (headers) ->
 
 # parse cookie data
 # @return undefined if data couldn't be parsed
-exports.deserialize = (secret, timeout, str) =>
+exports.deserialize = (secret, timeout, str) ->
     # Parses a secure cookie string, returning the object stored within it.
     # Returns undefined (and sends out an error) if the secure cookie string does not validate.
     if not exports.valid(secret, timeout, str)
@@ -172,7 +172,7 @@ exports.deserialize = (secret, timeout, str) =>
 
 # construct cookie data
 # @return undefined if data couldn't be constructed
-exports.serialize = (secret, data) =>
+exports.serialize = (secret, data) ->
     # Turns a JSON-compatibile object literal into a secure cookie string
     data_str = JSON.stringify(data)
     data_enc = exports.encrypt(secret, data_str)
@@ -202,7 +202,7 @@ exports.hmac_signature = (secret, timestamp, data) ->
     hmac.digest('hex')
 
 
-exports.valid = (secret, timeout, str) =>
+exports.valid = (secret, timeout, str) ->
     # Tests the validity of a cookie string. Returns true if the HMAC
     # signature of the secret, timestamp and data blob matches the HMAC in the
     # cookie string, and the cookie's age is less than the timeout value.
