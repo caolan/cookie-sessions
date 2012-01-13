@@ -206,7 +206,7 @@ exports['serialize data over 4096 chars'] = function(test){
         var r = '';
         for(var i=0; i<4089; i++){
             r = r + 'x';
-        };
+        }
         return r;
     };
     sessions.hmac_signature = function(secret, timestamp, data_str){
@@ -794,4 +794,102 @@ exports['useHttpOnly: false'] = function(test){
         req.session = {test: 'test'};
         res.writeHead(200, {'other_header': 'val'});
     });
+};
+
+
+exports['onError: no secret'] = function(test){
+    test.expect(2);
+    sessions.Events.onError = null;
+    var errMsg = "Error: No secret set in cookie-session settings";
+
+    try {
+        sessions();
+    } catch (err) {
+        test.equals(err.toString(), errMsg)
+    }
+    sessions({
+        onError: function(err) {
+            test.equals(err.toString(), errMsg);
+            test.done();
+        }
+    });
+};
+
+
+exports['onError: bad path'] = function(test){
+    test.expect(2);
+    sessions.Events.onError = null;
+    var errMsg = "Error: Invalid cookie path, must start with \"/\"";
+
+    try {
+        sessions({
+            secret: "test",
+            path: "o"
+        });
+    } catch (err) {
+        test.equals(err.toString(), errMsg)
+    }
+
+    sessions({
+        secret: "test",
+        path: "o",
+        onError: function(err) {
+            test.equals(err.toString(), errMsg);
+            test.done();
+        }
+    });
+};
+
+
+
+exports['onError: bad cookie string'] = function(test){
+    test.expect(4);
+    sessions.Events.onError = null;
+    var errMsg = "Error: Invalid cookie";
+
+    try {
+        sessions.deserialize("test", 100, "blabla");
+    } catch (err) {
+        test.equals(err.type, "InvalidCookieError");
+        test.equals(err.toString(), errMsg)
+    }
+
+    sessions({
+        secret: "test",
+        onError: function (err) {
+            test.equals(err.type, "InvalidCookieError");
+            test.equals(err.toString(), errMsg);
+            test.done();
+        }
+    });
+    sessions.deserialize("test", 100, "blabla");
+};
+
+
+
+exports['onError: data too long'] = function(test){
+    test.expect(2);
+    sessions.Events.onError = null;
+    var errMsg = "Error: Data too long to store in a cookie";
+
+    var data = '';
+    for(var i=0; i<4089; i++){
+        data = data + 'x';
+    }
+
+
+    try {
+        sessions.serialize("test", data);
+    } catch (err) {
+        test.equals(err.toString(), errMsg)
+    }
+
+    sessions({
+        secret: "test",
+        onError: function (err) {
+            test.equals(err.toString(), errMsg);
+            test.done();
+        }
+    });
+    sessions.serialize("test", data);
 };

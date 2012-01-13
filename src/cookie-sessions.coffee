@@ -20,16 +20,23 @@ exports = module.exports = (settings) ->
         useExpires: true
         # use 'HttpOnly'?
         useHttpOnly: true
+        # error handler
+        onError: null
 
     # extend with passed-in settings
     for own k,v of settings
         s[k] = v
 
+    # do we have an error handling callback?
+    if "function" is typeof s.onError
+        exports.Events.onError = s.onError
+
+    # do some basic checks
     if not s.secret
-        throw new Error 'No secret set in cookie-session settings'
+        return exports.Events.throwErr 'No secret set in cookie-session settings'
 
     if "string" isnt typeof s.path or 0 isnt s.path.indexOf("/")
-        throw new Error 'invalid cookie path, must start with "/"'
+        return exports.Events.throwErr 'Invalid cookie path, must start with "/"'
 
 
     # Handle a request - the main method!
@@ -66,7 +73,9 @@ exports = module.exports = (settings) ->
                     cookiestr = escape(s.session_key) + '='
                     s.timeout = 0
             else
-                cookiestr = escape(s.session_key) + '=' + escape(exports.serialize(s.secret, req.session))
+                serializedData = exports.serialize(s.secret, req.session)
+                if serializedData
+                    cookiestr = escape(s.session_key) + '=' + escape(serializedData)
 
             if cookiestr
                 if s.useExpires  then cookiestr += '; expires=' + exports.expires(s.timeout)
@@ -106,8 +115,8 @@ exports = module.exports = (settings) ->
 exports.MAX_LENGTH = 4096
 
 
-
 # read session from given request cookie
+# @return undefined if session data wasn't found or couldn't be read
 exports.readSession = (session_key, secret, timeout, req) =>
     # Reads the session data stored in the cookie named 'key' if it validates,
     # otherwise returns an empty object.
@@ -150,27 +159,29 @@ exports.headersToArray = (headers) ->
 
 
 # parse cookie data
+# @return undefined if data couldn't be parsed
 exports.deserialize = (secret, timeout, str) =>
     # Parses a secure cookie string, returning the object stored within it.
-    # Throws an exception if the secure cookie string does not validate.
+    # Returns undefined (and sends out an error) if the secure cookie string does not validate.
     if not exports.valid(secret, timeout, str)
-        error = new Error('invalid cookie')
+        error = new Error('Invalid cookie')
         error.type = 'InvalidCookieError'
-        throw error
+        return exports.Events.throwErr(error)
     JSON.parse(exports.decrypt(secret, exports.split(str).data_blob))
 
 
 # construct cookie data
+# @return undefined if data couldn't be constructed
 exports.serialize = (secret, data) =>
     # Turns a JSON-compatibile object literal into a secure cookie string
     data_str = JSON.stringify(data)
     data_enc = exports.encrypt(secret, data_str)
     timestamp = new Date().getTime()
     hmac_sig = exports.hmac_signature(secret, timestamp, data_enc)
-    result = hmac_sig + timestamp + data_enc;
+    result = hmac_sig + timestamp + data_enc
     if not exports.checkLength(result)
-        throw new Error 'data too long to store in a cookie'
-    result;
+        return exports.Events.throwErr 'Data too long to store in a cookie'
+    result
 
 
 exports.split = (str) ->
@@ -222,3 +233,21 @@ exports.checkLength = (str) ->
 # exports.params timeout the time in milliseconds before the cookie expires
 exports.expires = (timeout) ->
     new Date(new Date().getTime() + timeout).toUTCString();
+
+
+# events delegate
+class exports.Events
+    # The error-handling callback
+    @onError: null
+
+    # Throw an error
+    # @param errObj an Error object or error message
+    # @return undefined
+    @throwErr: (err) ->
+        if typeof err isnt "object"
+            err = new Error(err)
+        if @onError then @onError(err) else throw err
+        undefined
+
+
+
