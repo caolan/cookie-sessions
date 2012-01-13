@@ -1,6 +1,9 @@
 crypto = require('crypto')
 url = require('url')
 
+# max allowable length of a cookie (4KB)
+MAX_LENGTH = 4096
+
 
 exports = module.exports = (settings) ->
     s =
@@ -110,9 +113,6 @@ exports = module.exports = (settings) ->
         next()
 
 
-
-# max allowable length of a cookie (4KB)
-exports.MAX_LENGTH = 4096
 
 
 # read session from given request cookie
@@ -226,7 +226,7 @@ exports.encrypt = (secret, str) ->
 
 exports.checkLength = (str) ->
     # Test if a string is within the maximum length allowed for a cookie (4KB.
-    return str.length <= exports.MAX_LENGTH
+    return str.length <= MAX_LENGTH
 
 
 # Generates an expires date
