@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/caolan/cookie-sessions.png)](http://travis-ci.org/caolan/cookie-sessions)
 # Cookie-Sessions
 
 Secure cookie-based session middleware for
