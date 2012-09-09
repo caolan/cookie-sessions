@@ -305,7 +305,7 @@ exports['readSession no cookie'] = function(test){
     var r = sessions.readSession(
         'node_session', 'secret', 12, 'request_obj'
     );
-    test.same(r, undefined, 'return empty session');
+    test.same(r, {}, 'return empty session');
 
     // restore copied functions
     sessions.readCookies = readCookies;
