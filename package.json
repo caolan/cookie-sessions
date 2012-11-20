@@ -4,7 +4,7 @@
 , "author": "Caolan McMahon"
 , "version": "0.0.2"
 , "scripts": {
-    "test": "nodeunit test",
+    "test": "nodeunit test"
 }
 , "repository" :
   { "type" : "git"
