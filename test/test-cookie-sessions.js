@@ -1,4 +1,4 @@
-var sessions = require('cookie-sessions');
+var sessions = require('../lib/cookie-sessions');
 
 
 exports['split'] = function(test){
@@ -305,7 +305,7 @@ exports['readSession no cookie'] = function(test){
     var r = sessions.readSession(
         'node_session', 'secret', 12, 'request_obj'
     );
-    test.same(r, undefined, 'return empty session');
+    test.same(r, {}, 'return empty session');
 
     // restore copied functions
     sessions.readCookies = readCookies;
@@ -359,6 +359,101 @@ exports['writeHead'] = function(test){
                 '_node=serialized_session; ' +
                 'expires=expiry_date; ' +
                 'path=/; HttpOnly; Domain=.domain.com'
+            );
+            test.equals(headers['original'], 'header');
+        }
+    };
+
+    var serialize = sessions.serialize;
+    sessions.serialize = function(secret, data){
+        test.equals(secret, 'secret', 'serialize called with secret');
+        test.same(data, {test:'test'}, 'serialize called with session data');
+        return 'serialized_session';
+    };
+
+    var expires = sessions.expires;
+    sessions.expires = function(timeout){
+        test.equals(timeout, s.timeout);
+        return 'expiry_date';
+    };
+
+    var next = function(){
+        test.ok(true, 'chain.next called');
+        req.session = {test:'test'};
+        res.writeHead(200, {'original':'header'});
+        // restore copied functions
+        sessions.serialize = serialize;
+        sessions.expires = expires;
+        test.done();
+    };
+    sessions(s)(req, res, next);
+};
+
+exports['writeHead secure cookies'] = function(test){
+    test.expect(6);
+
+    var s = {
+        session_key:'_node',
+        secret: 'secret',
+        timeout: 86400,
+        secure: true
+    };
+    var req = {headers: {cookie: "_node="}, url: '/'};
+    var res = {
+        writeHead: function(code, headers){
+            test.equals(
+                headers['Set-Cookie'],
+                '_node=serialized_session; ' +
+                'expires=expiry_date; ' +
+                'path=/; HttpOnly; Secure'
+            );
+            test.equals(headers['original'], 'header');
+        }
+    };
+
+    var serialize = sessions.serialize;
+    sessions.serialize = function(secret, data){
+        test.equals(secret, 'secret', 'serialize called with secret');
+        test.same(data, {test:'test'}, 'serialize called with session data');
+        return 'serialized_session';
+    };
+
+    var expires = sessions.expires;
+    sessions.expires = function(timeout){
+        test.equals(timeout, s.timeout);
+        return 'expiry_date';
+    };
+
+    var next = function(){
+        test.ok(true, 'chain.next called');
+        req.session = {test:'test'};
+        res.writeHead(200, {'original':'header'});
+        // restore copied functions
+        sessions.serialize = serialize;
+        sessions.expires = expires;
+        test.done();
+    };
+    sessions(s)(req, res, next);
+};
+
+exports['writeHead secure cookies with domain'] = function(test){
+    test.expect(6);
+
+    var s = {
+        session_key:'_node',
+        secret: 'secret',
+        timeout: 86400,
+        domain:'.domain.com',
+        secure: true
+    };
+    var req = {headers: {cookie: "_node="}, url: '/'};
+    var res = {
+        writeHead: function(code, headers){
+            test.equals(
+                headers['Set-Cookie'],
+                '_node=serialized_session; ' +
+                'expires=expiry_date; ' +
+                'path=/; HttpOnly; Domain=.domain.com; Secure'
             );
             test.equals(headers['original'], 'header');
         }

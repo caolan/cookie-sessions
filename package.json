@@ -3,11 +3,17 @@
 , "main": "./index"
 , "author": "Caolan McMahon"
 , "version": "0.0.2"
+, "scripts": {
+    "test": "nodeunit test",
+}
 , "repository" :
   { "type" : "git"
   , "url" : "http://github.com/caolan/cookie-sessions.git"
   }
 , "bugs" : { "url" : "http://github.com/caolan/cookie-sessions/issues" }
+, "devDependencies" : {
+	"nodeunit" : "*"
+}
 , "licenses" :
   [ { "type" : "MIT"
     , "url" : "http://github.com/caolan/cookie-sessions/raw/master/LICENSE"
