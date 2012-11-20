@@ -484,6 +484,51 @@ exports['writeHead secure cookies with domain'] = function(test){
     sessions(s)(req, res, next);
 };
 
+exports['writeHead session cookies'] = function(test){
+    test.expect(5);
+
+    var s = {
+        session_key:'_node',
+        secret: 'secret',
+        session_cookie: true
+    };
+    var req = {headers: {cookie: "_node="}, url: '/'};
+    var res = {
+        writeHead: function(code, headers){
+            test.equals(
+                headers['Set-Cookie'],
+                '_node=serialized_session; ' +
+                'path=/; HttpOnly'
+            );
+            test.equals(headers['original'], 'header');
+        }
+    };
+
+    var serialize = sessions.serialize;
+    sessions.serialize = function(secret, data){
+        test.equals(secret, 'secret', 'serialize called with secret');
+        test.same(data, {test:'test'}, 'serialize called with session data');
+        return 'serialized_session';
+    };
+
+    var expires = sessions.expires;
+    sessions.expires = function(timeout){
+        test.equals(null, s.timeout);
+        return 'expiry_date';
+    };
+
+    var next = function(){
+        test.ok(true, 'chain.next called');
+        req.session = {test:'test'};
+        res.writeHead(200, {'original':'header'});
+        // restore copied functions
+        sessions.serialize = serialize;
+        sessions.expires = expires;
+        test.done();
+    };
+    sessions(s)(req, res, next);
+};
+
 exports['writeHead doesnt write cookie if none exists and session is undefined'] = function(test){
     test.expect(3);
 
@@ -532,7 +577,7 @@ exports['writeHead writes empty cookie with immediate expiration if session is u
 
     var expires = sessions.expires;
     sessions.expires = function(timeout){
-        test.equals(timeout, 0);
+        test.equals(timeout, -30 * 24 * 60 * 60 * 1000);
         return 'now';
     };
     var readSession = sessions.readSession;
