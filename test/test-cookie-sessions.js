@@ -133,12 +133,10 @@ exports['deserialize invalid cookie'] = function(test){
     JSON.parse = function(str){
         test.ok(false, 'should not attempt to parse invalid cookie');
     };
-    try {
-        sessions.deserialize('secret', 123, 'cookiestring');
-    }
-    catch(e){
-        test.ok(true, 'throw exception on invalid cookie');
-    }
+    
+    var result = sessions.deserialize('secret', 123, 'cookiestring');
+
+    test.same({}, result, 'should return empty cookie')
 
     // restore copied functions:
     sessions.valid = valid;
@@ -212,14 +210,10 @@ exports['serialize data over 4096 chars'] = function(test){
     sessions.hmac_signature = function(secret, timestamp, data_str){
         return 'hmac';
     };
-    try {
-        var r = sessions.serialize('secret', {test:'test'});
-    }
-    catch(e){
-        test.ok(
-            true, 'serializing a cookie over 4096 chars throws an exception'
-        );
-    }
+
+    var r = sessions.serialize('secret', {test:'test'});
+
+    test.same({}, r, 'should return empty cookie on long data');
 
     // restore copied functions:
     sessions.encrypt = encrypt;
