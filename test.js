@@ -1,11 +1,7 @@
 #!/usr/local/bin/node
 
-require.paths.push(__dirname);
-require.paths.push(__dirname + '/deps');
-require.paths.push(__dirname + '/lib');
-
 try {
-    var testrunner = require('nodeunit').testrunner;
+    var testrunner = require('./deps/nodeunit').testrunner;
 }
 catch(e) {
     var sys = require('sys');
