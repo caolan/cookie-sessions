@@ -1,4 +1,4 @@
-var sessions = require('cookie-sessions');
+var sessions = require('../lib/cookie-sessions');
 
 
 exports['split'] = function(test){
