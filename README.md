@@ -14,6 +14,9 @@ Session data is stored on the request object in the 'session' property:
     })
   );
 ```
+The middleware requires that
+[cookie-parser](https://www.npmjs.com/package/cookie-parser) middleware is also
+used.
 
 The session data can be any JSON object. It's timestamped, encrypted and
 authenticated automatically. The authenticated encryption uses
@@ -24,18 +27,17 @@ function. The httpOnly cookie flag is set by default.
 
 The main function accepts a number of options:
 
-  * secret -- The secret to encrypt the session data with. It has to be 32
-    bytes long.
-  * timeout -- The amount of time in miliseconds before the cookie expires
-    (default: 24 hours)
-  * sessionKey -- The cookie key name to store the session data in (default:
-    \_node)
-  * path -- The path to use for the cookie (default: '/')
-  * domain -- (optional) Define a specific domain/subdomain scope for the
-    cookie
-  * secure -- (optional) Boolean, If true, the secure cookie flag will be set
-  * sessionCookie -- (optional) Boolean, if true, it's considered a session
-    cookie and no "expires" is set
+| Option        | Required | Description                                                                                                             | Default  |
+|---------------|----------|-------------------------------------------------------------------------------------------------------------------------|----------|
+| secret        | Yes      | The secret to encrypt the session data, which must be 32 bytes long; i.e., a 32-byte buffer or 64-character hex string. |          |
+| timeout       | Yes      | The amount of time in milliseconds before the cookie expires.                                                           | 24 hours |
+| sessionKey    | Yes      | The cookie key name in which to store the session data.                                                                 | `\_node` |
+| path          | Yes      | The path to use for the cookie.                                                                                         | `/`      |
+| domain        | No       | Define a specific domain/subdomain scope for the cookie.                                                                |          |
+| httpOnly      | No       | Boolean: if true, the httpOnly cookie flag will be set.                                                                 |   true   |
+| secure        | No       | Boolean: if true, the secure cookie flag will be set.                                                                   |   true   |
+| sameSite      | No       | If set to "lax" or "strict", the sameSite cookie flag with the corresponding mode will be set.                         |          |
+| sessionCookie | No       | Boolean: if true, it's considered a session cookie and no "expires" is set.                                             |          |
 
 
 ## Why store session data in cookies?
