@@ -101,7 +101,7 @@ describe('cookie sessions tests', () => {
   })
 
   describe('onInit', () => {
-    it('throw exception if no secret set in server settings', () => {
+    it('throw error if no secret set in server settings', () => {
       try {
         sessions({})
       } catch(err) {
@@ -109,7 +109,7 @@ describe('cookie sessions tests', () => {
         assert.equal(err.message, 'No secret set in cookie-session settings')
       }
     });
-    it('throw exception for invalid path', () => {
+    it('throw error for invalid path', () => {
       try {
         sessions({path: 'foo/bar'})
       } catch(err) {
@@ -126,6 +126,14 @@ describe('cookie sessions tests', () => {
         done()
       }
       session(req, res, next)
+    });
+    it('throw error for invalid value in sameSite option', () => {
+      try {
+        sessions({secret: secret, sameSite: true})
+      } catch(err) {
+        assert.ok(err)
+        assert.equal(err.message, 'Possible values for sameSite option: "lax" or "strict"')
+      }
     });
   })
 })
