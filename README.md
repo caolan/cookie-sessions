@@ -9,7 +9,7 @@ Session data is stored on the request object in the 'session' property:
 
   app.use(
     cookieSessions({
-      session_key: 'session_data',
+      sessionKey: 'session_data',
       secret: process.env.SECRET
     })
   );
