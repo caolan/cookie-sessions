@@ -2,13 +2,16 @@ var sessions = require('../lib/cookie-sessions');
 var assert  = require('assert')
 var sinon = require('sinon')
 var crypto = require('crypto')
-var sandbox;
+var request = require('supertest');
+var express = require('express');
+var cookieParser = require('cookie-parser')
 
-describe('cookie sessions tests', () => {
-  var secret = '63e973cd82855e4f5669af6d7fa0ec4be02474871c155ead81a669474adc5e61'
+describe('cookie sessions tests', function() {
+  var secret = '8c06bdc84bf095d76b18c1e3a485dfe6'
   var message = 'the answer to the ultimate question of life, the universe, and everything'
-  var encr = '8c17200a08910652154d41b561242f4ff4672e4caf2ac71fc29b40cbe8f1451519e333f26f6b87fbda5e29220171dc350d67b537ee7ac02d2e6dd4f25597de27727a70c2e196242026a15daffaaf6bc9230b03b5786879e9bd'
-  var nonce = '074800982ca4f120b37acaf86c4997769100843d466e5595'
+  var encr = '017cb25516cf63f676e680abf99e2797da7f0765b3f19e53adbdadfaf2cd8f9a9378a35b1e52fb00e2a5aa577eb277d98096dbb75afd9dd57b0498e54ead8fc66ed980bf1e60a1b2b8'
+  var iv = '55df03d8dd90145b7f23211613d46b2d'
+  var authTag = 'c9e0fe9af2412ce941d18e7eae667402'
   var user_data = {
     id: 123,
     username: 'foobar',
@@ -17,91 +20,87 @@ describe('cookie sessions tests', () => {
   }
 
   beforeEach(function () {
-    sandbox = sinon.createSandbox();
+    this.sandbox = sinon.createSandbox();
   });
 
   afterEach(function () {
-    sandbox.restore();
+    this.sandbox.restore();
   });
 
-  describe('encrypt', () => {
-    it('should sucessfully return encrypted data', (done) => {
-      sessions.encrypt(secret, message, (err, result) => {
-        assert.ok(!err)
-        done();
-      });
+  describe('encrypt', function() {
+    it('should sucessfully return encrypted data', function() {
+      enc = sessions.encrypt(secret, message)
+      assert.ok(enc.ciphertext)
+      assert.ok(enc.iv)
+      assert.ok(enc.authTag)
     })
   })
 
-  describe('decrypt', () => {
-    it('should sucessfully return decrypted data', (done) => {
-      sessions.decrypt(secret, encr, nonce, (err, plaintext) => {
-        assert.equal(message, plaintext)
-        done();
-      });
+  describe('decrypt', function() {
+    it('should sucessfully return decrypted data', function() {
+      plaintext = sessions.decrypt(secret, encr, iv, authTag)
+      assert.equal(message, plaintext)
     })
   })
 
-  describe('serialize', () => {
-    it('should return a string', (done) => {
-      sessions.serialize(secret, user_data, (err, result) => {
-        assert.ok(!err)
-        var arr = result.split('$')
-        var nonce = arr[0]
-        var cipher = arr[1]
-        assert.ok(nonce)
-        assert.ok(cipher)
-        done();
-      });
+  describe('serialize', function() {
+    it('should return a string', function() {
+      var result = sessions.serialize(secret, user_data, 1540678757323,  false)
+      var arr = result.split('$')
+      var cipher = arr[0]
+      var iv = arr[1]
+      var authTag = arr[2]
+      assert.ok(cipher)
+      assert.ok(iv)
+      assert.ok(authTag)
     })
 
-    it('should return error on long data', (done) => {
+    it('should return error on long data', function() {
       var  long = '';
-      for(var i=0; i<2050; i++){
+      for(var i = 0; i < 1500; i++){
           long += 'a';
       };
-      sandbox.stub(sessions, 'encrypt').yields(null, {ciphertext: long, nonce: long});
-      sessions.serialize(secret, user_data, (err, result) => {
-        assert.ok(err)
+      this.sandbox.stub(sessions, 'encrypt').returns({ciphertext: long, iv: long, authTag: long});
+      try {
+        var cookiestr = sessions.serialize(secret, user_data)
+      }
+      catch(err) {
         assert.equal(err.message, 'Data too long to store in a cookie')
-        done();
-      });
+      };
     })
   })
 
-  describe('deserialize', () => {
-    it('should return user data in JSON if cookie has not expired', (done) => {
-      sessions.serialize(secret, user_data, (err, result) => {
-        sessions.deserialize(secret, result, 1000 * 60 * 60 * 24, (err, data) => {
-          assert.ok(!err)
-          assert.deepEqual(data, user_data)
-          done();
-        });
-      });
+  describe('deserialize', function() {
+    it('should return user data in JSON if cookie has not expired', function() {
+      var cookiestr = sessions.serialize(secret, user_data, Date.now(), false)
+      var jsonData = sessions.deserialize(secret, cookiestr, 1000 * 60 * 60 * 12)
+      assert.deepEqual(jsonData.data, user_data)
     })
 
-    it('should return validation error if cookie has expired', (done) => {
-      var str = 'b5a8af11ce10cd632796df523c9142595b472b686738f6a6$29d28d5d9c63b3daf6d628626b5ce3d045dc506321579af014b7eda3665e84342f65c97f79df314b7991255a41585e325e7a6e7e0218485c27af644cc1517e81801dae85716deeea32fbdccebda1ed59a3b3a1ec689447d5a39d6a37c4541623ef93ffc0ca2fb17cd20e4708a7fab59e3f87c5c5afa277b66bd3'
-      sessions.deserialize(secret, str, 1000 * 60 * 60 * 24, (err, data) => {
+    it('should return validation error if cookie has expired', function() {
+      var str = '3d11d4581d2359247a4183fc3c84aceaa5835d38075117b10c1f8bcff4a63f0d3740f6ff30f60942b9851af38fd8f1d5bcf6b2376c6803f001a844dc71b5d50276cbb735f501c47d320ef6c6d07cd2047b7a6b26521c23687718ebf248bd9b$69d2b05d79b47c3e5a94b0f32f2fbe3b$ed4c06a57df5a2b646f7e5f82bffb17f'
+      try {
+        var jsonData = sessions.deserialize(secret, str, 1000 * 60 * 60 * 10)
+      }
+      catch(err) {
         assert.ok(err)
         assert.equal(err.message, 'Cookie expired')
-        done();
-      });
+      }
     })
   })
 
-  describe('readSession', () => {
-    it('session with key node_session read ok', () => {
-      sandbox.stub(sessions, 'deserialize').yields(null, {username: 'foobar'});
-      sessions.readSession('node_session', secret, 12, {cookies: {node_session: 'lala'}} , (err, data) => {
-        assert.ok(!err)
-        assert.deepEqual({username: 'foobar'}, data)
-      })
+  /*
+  describe('readSession', function() {
+    it('session with key node_session read ok', function() {
+      this.sandbox.stub(sessions, 'deserialize').returns({username: 'foobar'});
+      var session = sessions.readSession('node_session', secret, 12, {cookies: {node_session: 'lala'}})
+      assert.deepEqual({username: 'foobar'}, session)
     });
   })
+  */
 
-  describe('onInit', () => {
-    it('throw error if no secret set in server settings', () => {
+  describe('onInit', function() {
+    it('throw error if no secret set in server settings', function() {
       try {
         sessions({})
       } catch(err) {
@@ -109,12 +108,12 @@ describe('cookie sessions tests', () => {
         assert.equal(err.message, 'No secret set in cookie-session settings')
       }
     });
-    it('throw error for invalid path', () => {
+    it('throw error for invalid path', function() {
       try {
-        sessions({path: 'foo/bar'})
+        sessions({secret: secret, path: 'foo/bar'})
       } catch(err) {
         assert.ok(err)
-        assert.equal(err.message, 'No secret set in cookie-session settings')
+        assert.equal(err.message, 'Invalid cookie path, must start with "/"')
       }
     });
     it('should do nothing for a request not under the specified path', (done) => {
@@ -127,13 +126,148 @@ describe('cookie sessions tests', () => {
       }
       session(req, res, next)
     });
-    it('throw error for invalid value in sameSite option', () => {
+    it('throw error for invalid value in sameSite option', function() {
       try {
         sessions({secret: secret, sameSite: true})
       } catch(err) {
         assert.ok(err)
         assert.equal(err.message, 'Possible values for sameSite option: "lax" or "strict"')
       }
+    });
+  })
+
+  describe('the middleware', function() {
+    beforeEach(function () {
+      this.app = express();
+    });
+
+    describe('when session has already data', function() {
+      beforeEach(function() {
+        this.sandbox.stub(sessions, 'deserialize').returns({data: {username: 'foobar'}, time: 1540684048566});
+      });
+
+      describe('and new data are added to req.session', function() {
+        describe('and autoRenew is set to true', function() {
+          it('should set a new cookie with the combined data and with new timestamp', function () {
+            this.app.use(cookieParser())
+            this.app.use(sessions({secret: secret, autoRenew: true}))
+            this.app.get('/', (req, res) => {
+              req.session.koko = 'bar'
+              res.send('Hello World!')
+            })
+            return request(this.app)
+            .get('/')
+            .then(res => {
+              this.sandbox.restore();
+              assert(res.headers['set-cookie'])
+              _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
+              var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
+              assert.notEqual(jsonData.time, 1540684048566)
+              assert.deepEqual(jsonData.data, { username: 'foobar', koko: 'bar' })
+            })
+          });
+        });
+        describe('and autoRenew is set to false', function() {
+          it('should set a new cookie with the combined data and the initial timestamp', function () {
+            this.app.use(cookieParser())
+            this.app.use(sessions({secret: secret, autoRenew: false}))
+            this.app.get('/', (req, res) => {
+              req.session.koko = 'bar'
+              res.send('Hello World!')
+            })
+            return request(this.app)
+            .get('/')
+            .then(res => {
+              this.sandbox.restore();
+              assert(res.headers['set-cookie'])
+              var _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
+              var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
+              assert.equal(jsonData.time, 1540684048566)
+              assert.deepEqual(jsonData.data, { username: 'foobar', koko: 'bar' })
+            })
+          });
+        });
+      });
+      describe('and no data are added to req.session', function() {
+        describe('and autoRenew is set to true', function() {
+          it('should set a new cookie with new timestamp', function () {
+            this.app.use(cookieParser())
+            this.app.use(sessions({secret: secret, autoRenew: true}))
+            this.app.get('/', (req, res) => {
+              res.send('Hello World!')
+            })
+            return request(this.app)
+            .get('/')
+            .then(res => {
+              this.sandbox.restore();
+              assert(res.headers['set-cookie'])
+              var _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
+              var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
+              assert.notEqual(jsonData.time, 1540684048566)
+              assert.deepEqual(jsonData.data, { username: 'foobar'})
+            })
+          });
+        });
+        describe('and autoRenew is set to false', function() {
+          it('should not set a new cookie', function () {
+            this.app.use(cookieParser())
+            this.app.use(sessions({secret: secret, autoRenew: false}))
+            this.app.get('/', (req, res) => {
+              res.send('Hello World!')
+            })
+            return request(this.app)
+            .get('/')
+            .then(res => {
+              this.sandbox.restore();
+              assert(!res.headers['set-cookie'])
+            })
+          });
+        });
+      });
+      describe('data get deleted from req.session', function() {
+        it('should set a new cookie with empty data', function () {
+          this.app.use(cookieParser())
+          this.app.use(sessions({secret: secret}))
+          this.app.get('/', (req, res) => {
+            req.session = {}
+            res.send('Hello World!')
+          })
+          this.sandbox.restore();
+          var cookiestr = sessions.serialize(secret, user_data, Date.now(),  false)
+          return request(this.app)
+          .get('/')
+          .set('Cookie', '_node=' + encodeURIComponent(cookiestr))
+          .then(res => {
+            assert(res.headers['set-cookie'])
+            var _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
+            var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
+            assert.deepEqual(jsonData.data, {})
+          })
+        });
+      });
+    });
+    describe('when session is empty', function() {
+      describe('and new data are added to req.session', function() {
+        it('should set a new cookie with the new data and with a timestamp', function () {
+          this.sandbox.stub(sessions, 'deserialize').returns({data: {}});
+          this.app.use(cookieParser())
+          this.app.use(sessions({secret: secret}))
+          this.app.get('/', (req, res) => {
+            req.session.koko = 'bar'
+            res.send('Hello World!')
+          })
+          return request(this.app)
+          .get('/')
+          .then(res => {
+            this.sandbox.restore()
+            assert(res.headers['set-cookie'])
+            var _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
+            var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
+            assert(jsonData.time)
+            assert.deepEqual(jsonData.data, { koko: 'bar' })
+          })
+        });
+      });
     });
   })
 })
