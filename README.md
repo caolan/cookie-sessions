@@ -14,16 +14,14 @@ Session data is stored on the request object in the 'session' property:
     })
   );
 ```
-The middleware requires that
-[cookie-parser](https://www.npmjs.com/package/cookie-parser) middleware is also
-used.
+
+The [cookie-parser](https://www.npmjs.com/package/cookie-parser) middleware
+MUST also used.
 
 The session data can be any JSON object. It's timestamped, encrypted and
-authenticated automatically. The authenticated encryption uses
-`xsalsa20poly1305` offered by
-[auth0-magic](https://github.com/auth0/magic) via
-[magic.encrypt.sync](https://github.com/auth0/magic/#magicencryptsync--magicdecryptsync)
-function. The httpOnly cookie flag is set by default.
+authenticated automatically. The authenticated encryption uses `aes-256-gcm``
+offered by the node `crypto` library. The httpOnly and secure cookie flags are
+set by default.
 
 The main function accepts a number of options:
 
@@ -31,12 +29,13 @@ The main function accepts a number of options:
 |---------------|----------|-------------------------------------------------------------------------------------------------------------------------|----------|
 | secret        | Yes      | The secret to encrypt the session data, which must be 32 bytes long; i.e., a 32-byte buffer or 64-character hex string. |          |
 | timeout       | Yes      | The amount of time in milliseconds before the cookie expires.                                                           | 24 hours |
-| sessionKey    | Yes      | The cookie key name in which to store the session data.                                                                 | `\_node` |
+| name          | Yes      | The cookie name in which to store the session data.                                                                     | `\_node` |
 | path          | Yes      | The path to use for the cookie.                                                                                         | `/`      |
 | domain        | No       | Define a specific domain/subdomain scope for the cookie.                                                                |          |
+| autoRenew     | No       | Boolean: if true, a new cookie will be set in each response with an updated expiration Date.now() + timeout             |   true   |
 | httpOnly      | No       | Boolean: if true, the httpOnly cookie flag will be set.                                                                 |   true   |
 | secure        | No       | Boolean: if true, the secure cookie flag will be set.                                                                   |   true   |
-| sameSite      | No       | If set to "lax" or "strict", the sameSite cookie flag with the corresponding mode will be set.                         |          |
+| sameSite      | No       | If set to "lax" or "strict", the sameSite cookie flag with the corresponding mode will be set.                          |          |
 | sessionCookie | No       | Boolean: if true, it's considered a session cookie and no "expires" is set.                                             |          |
 
 
@@ -60,19 +59,11 @@ sessions!
 ## Migrating to version 1.0.0
 
 * Any cookie created with 0.0.2 version will be invalidated.
-* The secret used to encrypt the sessions data can no longer be of any length.
-  It MUST be 32 bytes long and passed as either a Buffer object or a hex
-  encoded string.
 * The `options` object has two naming changes:
-  * `sessionKey` instead of `session_key`
+  * `name` instead of `session_key`
   * `sessionCookie` instead of `session_cookie`
-* The following exported functions are now async and expect a callback:
-  * readSession
-  * serialize
-  * deserialize
-  * encrypt
-  * decrypt
 * The following exported functions have been removed:
+  * readSession
   * readCookies
   * checkLength
   * headersToArray
