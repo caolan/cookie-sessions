@@ -89,16 +89,6 @@ describe('cookie sessions tests', function() {
     })
   })
 
-  /*
-  describe('readSession', function() {
-    it('session with key node_session read ok', function() {
-      this.sandbox.stub(sessions, 'deserialize').returns({username: 'foobar'});
-      var session = sessions.readSession('node_session', secret, 12, {cookies: {node_session: 'lala'}})
-      assert.deepEqual({username: 'foobar'}, session)
-    });
-  })
-  */
-
   describe('onInit', function() {
     it('throw error if no secret set in server settings', function() {
       try {
