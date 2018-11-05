@@ -5,11 +5,12 @@ Secure cookie-based session middleware for Express.
 Session data is stored on the request object in the 'session' property:
 ```js
   var app = require('express');
+  var cookieParser = require('cookie-parser');
   var cookieSessions = require('cookie-sessions');
 
   app.use(
     cookieSessions({
-      sessionKey: 'session_data',
+      name: 'session_data',
       secret: process.env.SECRET
     })
   );
@@ -19,7 +20,7 @@ The [cookie-parser](https://www.npmjs.com/package/cookie-parser) middleware
 MUST also used.
 
 The session data can be any JSON object. It's timestamped, encrypted and
-authenticated automatically. The authenticated encryption uses `aes-256-gcm``
+authenticated automatically. The authenticated encryption uses `aes-256-gcm`
 offered by the node `crypto` library. The httpOnly and secure cookie flags are
 set by default.
 
@@ -27,7 +28,7 @@ The main function accepts a number of options:
 
 | Option        | Required | Description                                                                                                             | Default  |
 |---------------|----------|-------------------------------------------------------------------------------------------------------------------------|----------|
-| secret        | Yes      | The secret to encrypt the session data, which must be 32 bytes long; i.e., a 32-byte buffer or 64-character hex string. |          |
+| secret        | Yes      | The secret to encrypt the session data.                                                                                 |          |
 | timeout       | Yes      | The amount of time in milliseconds before the cookie expires.                                                           | 24 hours |
 | name          | Yes      | The cookie name in which to store the session data.                                                                     | `\_node` |
 | path          | Yes      | The path to use for the cookie.                                                                                         | `/`      |
