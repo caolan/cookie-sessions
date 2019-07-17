@@ -2,7 +2,7 @@
   "name": "cookie-sessions",
   "description": "Secure cookie-based session middleware for Express",
   "main": "./lib/cookie-sessions",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "test": "NODE_PATH=. nyc mocha ./test"
   },
