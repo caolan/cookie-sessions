@@ -133,7 +133,8 @@ describe('cookie sessions tests', function() {
 
     describe('when session has already data', function() {
       beforeEach(function() {
-        this.sandbox.stub(sessions, 'deserialize').returns({data: {username: 'foobar'}, time: 1540684048566});
+        this.cookieTime = Date.now()
+        this.sandbox.stub(sessions, 'deserialize').returns({data: {username: 'foobar'}, time: this.cookieTime});
       });
 
       describe('and new data are added to req.session', function() {
@@ -152,7 +153,7 @@ describe('cookie sessions tests', function() {
               assert(res.headers['set-cookie'])
               _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
               var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
-              assert.notEqual(jsonData.time, 1540684048566)
+              assert.notEqual(jsonData.time, this.cookieTime)
               assert.deepEqual(jsonData.data, { username: 'foobar', koko: 'bar' })
             })
           });
@@ -172,7 +173,7 @@ describe('cookie sessions tests', function() {
               assert(res.headers['set-cookie'])
               var _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
               var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
-              assert.equal(jsonData.time, 1540684048566)
+              assert.equal(jsonData.time, this.cookieTime)
               assert.deepEqual(jsonData.data, { username: 'foobar', koko: 'bar' })
             })
           });
@@ -193,7 +194,7 @@ describe('cookie sessions tests', function() {
               assert(res.headers['set-cookie'])
               var _node = res.headers['set-cookie'][0].split(';')[0].split('=')[1]
               var jsonData = sessions.deserialize(secret, decodeURIComponent(_node), 1000 * 60 * 60 * 24)
-              assert.notEqual(jsonData.time, 1540684048566)
+              assert.notEqual(jsonData.time, this.cookieTime)
               assert.deepEqual(jsonData.data, { username: 'foobar'})
             })
           });
