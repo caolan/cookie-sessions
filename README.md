@@ -1,34 +1,43 @@
 # Cookie-Sessions
 
-Secure cookie-based session middleware for
-[Connect](http://github.com/senchalabs/connect). This is a new module and I
-wouldn't recommend for production use just yet.
+Secure cookie-based session middleware for Express.
 
 Session data is stored on the request object in the 'session' property:
+```js
+  var app = require('express');
+  var cookieParser = require('cookie-parser');
+  var cookieSessions = require('cookie-sessions');
 
-    var connect = require('connect'),
-        sessions = require('cookie-sessions');
+  app.use(
+    cookieSessions({
+      name: 'session_data',
+      secret: process.env.SECRET
+    })
+  );
+```
 
-    Connect.createServer(
-        sessions({secret: '123abc'}),
-        function(req, res, next){
-            req.session = {'hello':'world'};
-            res.writeHead(200, {'Content-Type':'text/plain'});
-            res.end('session data updated');
-        }
-    ).listen(8080);
+The [cookie-parser](https://www.npmjs.com/package/cookie-parser) middleware
+MUST also used.
 
-The session data is JSON.stringified, encrypted and timestamped, then a HMAC
-signature is attached to test for tampering. The main function accepts a
-number of options:
+The session data can be any JSON object. It's timestamped, encrypted and
+authenticated automatically. The authenticated encryption uses `aes-256-gcm`
+offered by the node `crypto` library. The httpOnly and secure cookie flags are
+set by default.
 
-    * secret -- The secret to encrypt the session data with
-    * timeout -- The amount of time in miliseconds before the cookie expires
-      (default: 24 hours)
-    * session_key -- The cookie key name to store the session data in
-      (default: _node)
-    * path -- The path to use for the cookie (default: '/')
-	* domain -- (optional) Define a specific domain/subdomain scope for the cookie
+The main function accepts a number of options:
+
+| Option        | Required | Description                                                                                                             | Default  |
+|---------------|----------|-------------------------------------------------------------------------------------------------------------------------|----------|
+| secret        | Yes      | The secret to encrypt the session data.                                                                                 |          |
+| timeout       | Yes      | The amount of time in milliseconds before the cookie expires.                                                           | 24 hours |
+| name          | Yes      | The cookie name in which to store the session data.                                                                     | `\_node` |
+| path          | Yes      | The path to use for the cookie.                                                                                         | `/`      |
+| domain        | No       | Define a specific domain/subdomain scope for the cookie.                                                                |          |
+| autoRenew     | No       | Boolean: if true, a new cookie will be set in each response with an updated expiration Date.now() + timeout             |   true   |
+| httpOnly      | No       | Boolean: if true, the httpOnly cookie flag will be set.                                                                 |   true   |
+| secure        | No       | Boolean: if true, the secure cookie flag will be set.                                                                   |   true   |
+| sameSite      | No       | If set to "lax" or "strict", the sameSite cookie flag with the corresponding mode will be set.                          |          |
+| sessionCookie | No       | Boolean: if true, it's considered a session cookie and no "expires" is set.                                             |          |
 
 
 ## Why store session data in cookies?
@@ -47,3 +56,16 @@ number of options:
 
 __In summary:__ don't use cookie storage if you keep a lot of data in your
 sessions!
+
+## Migrating to version 1.0.0
+
+* Any cookie created with 0.0.2 version will be invalidated.
+* The `options` object has two naming changes:
+  * `name` instead of `session_key`
+  * `sessionCookie` instead of `session_cookie`
+* The following exported functions have been removed:
+  * readSession
+  * readCookies
+  * checkLength
+  * headersToArray
+  * hmac\_signature

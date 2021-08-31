@@ -1,16 +1,33 @@
-{ "name": "cookie-sessions"
-, "description": "Secure cookie-based session middleware for Connect"
-, "main": "./index"
-, "author": "Caolan McMahon"
-, "version": "0.0.2"
-, "repository" :
-  { "type" : "git"
-  , "url" : "http://github.com/caolan/cookie-sessions.git"
-  }
-, "bugs" : { "url" : "http://github.com/caolan/cookie-sessions/issues" }
-, "licenses" :
-  [ { "type" : "MIT"
-    , "url" : "http://github.com/caolan/cookie-sessions/raw/master/LICENSE"
+{
+  "name": "cookie-sessions",
+  "description": "Secure cookie-based session middleware for Express",
+  "main": "./lib/cookie-sessions",
+  "version": "1.0.1",
+  "scripts": {
+    "test": "NODE_PATH=. nyc mocha ./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/auth0/cookie-sessions.git"
+  },
+  "bugs": {
+    "url": "http://github.com/auth0/cookie-sessions/issues"
+  },
+  "devDependencies": {
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.4",
+    "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
+    "sinon": "^7.0.0",
+    "supertest": "^3.3.0"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/caolan/cookie-sessions/raw/master/LICENSE"
     }
-  ]
+  ],
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
 }
